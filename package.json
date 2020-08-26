@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon",
+    ".": "nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "nodemonConfig": {
+    "delay": 1000
   },
   "author": "",
   "license": "ISC",
@@ -15,5 +20,8 @@
     "fs": "0.0.1-security",
     "node-fetch": "^2.6.0",
     "overwatch-api": "^0.10.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
   }
 }
