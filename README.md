@@ -1,3 +1,2 @@
 # Overbot
-## Bruno Stevaux
-## Youssof Abaza
+# By: Bruno Stevaux & Youssof Abaza
