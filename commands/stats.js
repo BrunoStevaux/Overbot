@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const { get_data } = require("../utils/data_request");
+const { user_parse } = require("../utils/parse_username");
 
 const ranks = {
   GRANDMASTER: "<:OBGrandmaster:746782184991621181>",
@@ -41,60 +42,53 @@ module.exports.run = async (bot, message, args) => {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Overwatch_circle_logo.svg/600px-Overwatch_circle_logo.svg.png";
 
   // if nothing aside from prefix is provided
-  console.log(args);
-  if (args.length == 0) {
-    const temp = await message.channel.send("You're missing a battletag!");
+  if (args.length < 2) {
+    const temp = await message.channel.send("You're missing arguments!");
     return;
   }
+
+  let platform = args[0].toLowerCase();
+  const platforms = [
+    "xbox",
+    "xbl",
+    "playstation",
+    "psn",
+    "nintendo-swtich",
+    "nintendo",
+    "switch",
+    "pc",
+  ];
+
   const temp = await message.channel.send("searching!");
-  const platforms = ["pc", "xbl", "psn"];
 
-  // Get the json for the profile, if it exists
-
-  //assume we are looking for PC
-  let platform = "pc";
-
-  // if user specifies platform
-  if (args[0].toLowerCase() == "pc") platform = "pc";
-  else if (["xbox", "xbl"].includes(args[0].toLowerCase())) platform = "xbl";
-  else if (["playstation", "psn"].includes(args[0].toLowerCase()))
-    platform = "psn";
-
-  let battletag;
-
-  //replace Example#0000 with Example-0000
-  if (platform == "pc") battletag = args[0].replace("#", "-");
-
-  //XBL usernames can have spaces. "The ultimate one" for example.
-  if (platform == "xbl") {
-    args.shift();
-    battletag = args.join(" ");
+  let username;
+  if (!platforms.includes(platform)) {
+    await temp.edit(`${platform} is not a valid platform.`);
+    return;
   }
 
-  //PSN usernames cannot have spaces.
-  if (platform == "psn") battletag = args[1];
+  args.shift();
 
-  console.log(
-    `[Request]\n` +
-      `Stats ${battletag}|${platform} from ${message.author.username}#${message.author.discriminator}\n` +
-      `Server: ${message.guild} Channel: ${message.channel.name}`
-  );
+  if (["xbox", "xbl"].includes(platform)) platform = "xbl";
+  if (["playstation", "psn"].includes(platform)) platform = "psn";
+  if (["nintendo-swicth", "nintendo", "switch"].includes(platform))
+    platform = "nintendo-swicth";
 
-  console.log(`battletag: ${battletag} platform ${platform}`);
+  username = user_parse(args, platform);
 
-  const x = await get_data(battletag, platform);
+  const x = await get_data(username, platform);
   let stats;
 
   // If null, we couldn't find the user.
   if (x != null) stats = await x.json();
   else {
     const emb = new Discord.MessageEmbed()
-      .setAuthor(battletag, overwatchIcon)
+      .setAuthor(username, overwatchIcon)
       .setDescription("This user could not be found.")
       .setColor("#fa9c1d");
     let d = new Date();
     let n = d.getTime();
-    emb.setFooter(`Response time: ${n - message.createdTimestamp}ms`);
+    emb.setFooter(`Response time: ${Math.abs(n - message.createdTimestamp)}ms`);
 
     temp.edit(message.author, emb);
     return;
@@ -112,7 +106,8 @@ module.exports.run = async (bot, message, args) => {
 
   if (stats.private == true) {
     emb.setDescription(
-      "This profile is private. To unprivate go to Carrer Profile > Social > Public."
+      "This profile is private.\n" +
+        "To unprivate go to Options > Social > Carrer Profile Visibility [Public]."
     );
   } else {
     // Make sure we have other ranks before calculating flex rank.
@@ -135,7 +130,7 @@ module.exports.run = async (bot, message, args) => {
   }
   let d = new Date();
   let n = d.getTime();
-  emb.setFooter(`Response time: ${n - message.createdTimestamp}ms`);
+  emb.setFooter(`Response time: ${Math.abs(n - message.createdTimestamp)}ms`);
 
   temp.edit(message.author, emb);
 };
